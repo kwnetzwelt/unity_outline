@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class OutlineRenderer : MonoBehaviour
 {
 	
-	OutlineGenerator gen;
 	
 	public Color[] colors;
 	
@@ -12,47 +12,31 @@ public class OutlineRenderer : MonoBehaviour
 	
 	public bool drawDebug = true;
 	
+	List<OutlineEdgeSequence> m_sequences;
 	
-	void Start()
+	public Vector3 m_offset;
+	
+	Stack<GameObject>m_edges = new Stack<GameObject>();
+	
+	public void Recalculate(List<OutlineEdgeSequence> _sequences)
 	{
-		gen = new OutlineGenerator();
-		// Ugly LineRenderer Approach
-		/*
-		int ci = 0;
-		
-		foreach(OutlineEdgeSequence s in gen.edgeSequences)
-		{
-			GameObject g = new GameObject("edges",typeof(LineRenderer));
-			
-			LineRenderer r = g.GetComponent<LineRenderer>();
-			
-			r.material = new Material(Shader.Find("Particles/Additive"));
-			Color c = colors[(ci++ % colors.Length)];
-			r.SetColors(c,c);
-			r.SetWidth(0.2f,0.2f);
-			
-			
-			r.SetVertexCount(s.edges.Count+1);
-			
-			for (int i = 0; i < s.edges.Count; i++) 
-			{
-				r.SetPosition(i,s.edges[i].start);
-			}
-			
-			r.SetPosition(s.edges.Count,s.edges[s.edges.Count-1].end);
-		}
-		*/
-		
-		
+		m_sequences = _sequences;
 		// Simple Mesh Renderer
 		int si = 0;
 		
-		foreach(OutlineEdgeSequence s in gen.edgeSequences)
+		while(m_edges.Count > 0)
+		{
+			GameObject.Destroy( m_edges.Pop() );
+		}
+		
+		foreach(OutlineEdgeSequence s in m_sequences)
 		{
 			Mesh m = new Mesh();
 			
 			GameObject g = new GameObject("edges");
 			g.transform.parent = this.transform;
+			
+			m_edges.Push(g);
 			
 			Vector3[] vertices = new Vector3[s.edges.Count * 4];
 			int[] triangles = new int[s.edges.Count * 6];
@@ -78,7 +62,7 @@ public class OutlineRenderer : MonoBehaviour
 				
 				normals[vi] = Vector3.up;
 				
-				if(e.nextEdge.normal != e.normal)
+				if(e.nextEdge != null && e.nextEdge.normal != e.normal)
 				{
 					vertices[vi++] = e.end - e.normal * 0.2f - e.nextEdge.normal * 0.2f;
 					
@@ -93,7 +77,8 @@ public class OutlineRenderer : MonoBehaviour
 				uvs[vi] = Vector2.up ;
 				normals[vi] = Vector3.up;
 				
-				if(e.prevEdge.normal != e.normal)
+				
+				if(e.prevEdge != null && e.prevEdge.normal != e.normal)
 				{
 					vertices[vi++] = e.start - e.normal * 0.2f - e.prevEdge.normal * 0.2f;
 				}
@@ -130,6 +115,7 @@ public class OutlineRenderer : MonoBehaviour
 			r.material.mainTexture = texture;
 			
 			f.mesh = m;
+			g.transform.position = m_offset;
 		}
 		
 		
@@ -140,12 +126,12 @@ public class OutlineRenderer : MonoBehaviour
 		if(drawDebug)
 		{
 		
-			if(gen != null && gen.edgeSequences != null)
+			if(m_sequences != null)
 			{
 				
 				int ci = 0;
 				
-				foreach(OutlineEdgeSequence s in gen.edgeSequences)
+				foreach(OutlineEdgeSequence s in m_sequences)
 				{
 					s.DrawDebug(colors[(ci++ % colors.Length)]);
 				}

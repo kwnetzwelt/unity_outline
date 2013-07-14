@@ -33,7 +33,7 @@ public class OutlineGenerator
 		//######
 		// #
 		// ####
-		
+		/*
 		points.Add(new Vector3(1,0,4));
 		points.Add(new Vector3(2,0,4));
 		points.Add(new Vector3(3,0,4));
@@ -68,15 +68,20 @@ public class OutlineGenerator
 		
 		GenOutlineEdges();
 		
-		
+		*/
 	}
 	
-	protected void GenOutlineEdges()
+	public void SetPoints(List<Vector3>_points)
+	{
+		points = _points;
+	}
+	
+	public void GenOutlineEdges()
 	{
 		
 		
 		edges = new List<OutlineEdge>();
-		
+		edgeSequences = new List<OutlineEdgeSequence>();
 		// Step 1 Iterate through points
 		
 		// Step 2 If point has less than 4 valid neighbors
